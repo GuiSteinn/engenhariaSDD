@@ -32,7 +32,7 @@ form.addEventListener('submit', event => {
   event.preventDefault();
   const text = input.value.trim();
   if (!text || text.length > 120) return;
-  tasks.push({ id: crypto.randomUUID(), text, done: false });
+  tasks.push({ id: Array.from(crypto.getRandomValues(new Uint32Array(2))).join('-'), text, done: false });
   save(); render(); form.reset(); input.focus();
 });
 render();
