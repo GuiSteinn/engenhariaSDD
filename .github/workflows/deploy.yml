@@ -1,0 +1,41 @@
+name: Testar, verificar segurança e publicar
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar JavaScript
+        run: node --check site/app.js && node tests/smoke.mjs
+      - name: Scanner de segurança Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+  deploy:
+    needs: validate
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, ec2]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publicar arquivos na EC2
+        run: |
+          install -d -m 755 /var/www/tarefa-sdd
+          cp site/index.html site/style.css site/app.js /var/www/tarefa-sdd/
+          chmod 644 /var/www/tarefa-sdd/*
+          curl --fail --silent --show-error http://127.0.0.1/ >/dev/null
