@@ -18,7 +18,7 @@ jobs:
       - name: Verificar JavaScript
         run: node --check site/app.js && node tests/smoke.mjs
       - name: Scanner de segurança Trivy
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
